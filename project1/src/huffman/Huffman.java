@@ -86,56 +86,10 @@ public class Huffman {
 	}
 
 	private String encode() {
-		final int THREAD_COUNT = 4;
-		StringBuilder[] threadResults = new StringBuilder[THREAD_COUNT];
-		for (int i = 0; i < threadResults.length; i++) {
-			threadResults[i] = new StringBuilder();
-		}
-		int startingIndex = 0;
-		final int FILE_LENGTH_DIVIDED = (int) Math.ceil((double) fileString
-				.length() / THREAD_COUNT);
-		int finishIndex = FILE_LENGTH_DIVIDED;
-		ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
-		for (int i = 0; i < THREAD_COUNT; i++) {
-			executor.execute(new Encoder(threadResults[i], startingIndex,
-					finishIndex, fileString, charCodes));
-			startingIndex += FILE_LENGTH_DIVIDED;
-			finishIndex = startingIndex + FILE_LENGTH_DIVIDED;
-		}
-		executor.shutdown();
-		while (!executor.isTerminated()) {
-			Thread.yield();
-		}
-		for (StringBuilder sb : threadResults) {
-			encodedString.append(sb.toString());
+		for (int i = 0; i < fileString.length(); i++) {
+			encodedString.append(charCodes.get(fileString.charAt(i)));
 		}
 		return encodedString.toString();
 	}
 
-	static class Encoder implements Runnable {
-		StringBuilder result;
-		int startingIndex;
-		int finishIndex;
-		String data;
-		HashMap<Character, String> charCodes;
-
-		Encoder(StringBuilder result, int startingIndex, int finishIndex,
-				String data, HashMap<Character, String> charCodes) {
-			this.result = result;
-			this.startingIndex = startingIndex;
-			this.finishIndex = finishIndex;
-			this.data = data;
-			this.charCodes = charCodes;
-		}
-
-		@Override
-		public void run() {
-			for (int i = startingIndex; i < finishIndex; i++) {
-				if (i >= data.length()) {
-					break;
-				}
-				result.append(charCodes.get(data.charAt(i)));
-			}
-		}
-	}
 }
