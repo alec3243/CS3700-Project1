@@ -27,8 +27,22 @@ public class Huffman {
 		fileString = new String(Files.readAllBytes(Paths.get(filename)));
 		final int ASCII_LENGTH = 128;
 		int[] frequencies = new int[ASCII_LENGTH];
-		for (char c : fileString.toCharArray()) {
-			frequencies[c] = frequencies[c] + 1;
+		char[] chars = fileString.toCharArray();
+		final int THREAD_COUNT = 4;
+		ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
+		int startIndex = 0;
+		final int FILE_SIZE_DIVISION = (int) Math.ceil((double) fileString
+				.length() / 4);
+		int finishIndex = FILE_SIZE_DIVISION;
+		for (int i = 0; i < THREAD_COUNT; i++) {
+			executor.execute(new Parser(startIndex, finishIndex, chars,
+					frequencies));
+			startIndex += FILE_SIZE_DIVISION;
+			finishIndex = startIndex + FILE_SIZE_DIVISION;
+		}
+		executor.shutdown();
+		while (!executor.isTerminated()) {
+			Thread.yield();
 		}
 		int freq = 0;
 		for (int i = 0; i < frequencies.length; i++) {
@@ -90,6 +104,32 @@ public class Huffman {
 			encodedString.append(charCodes.get(fileString.charAt(i)));
 		}
 		return encodedString.toString();
+	}
+
+	static class Parser implements Runnable {
+		int startIndex;
+		int finishIndex;
+		char[] chars;
+		int[] frequencies;
+
+		Parser(int startIndex, int finishIndex, char[] chars, int[] frequencies) {
+			this.startIndex = startIndex;
+			this.finishIndex = finishIndex;
+			this.chars = chars;
+			this.frequencies = frequencies;
+		}
+
+		@Override
+		public void run() {
+			for (int i = startIndex; i < finishIndex; i++) {
+				if (i >= chars.length) {
+					break;
+				}
+				frequencies[chars[i]] = frequencies[chars[i]] + 1;
+			}
+
+		}
+
 	}
 
 }
