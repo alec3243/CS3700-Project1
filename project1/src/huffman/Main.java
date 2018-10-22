@@ -14,18 +14,10 @@ public class Main {
 					.get(FILENAME)));
 			final int ORIGINAL_BYTES = ORIGINAL.length() * 8;
 
-			// Create tree and print time to make tree
-			long start = System.currentTimeMillis();
-
 			Huffman huffman = new Huffman(FILENAME);
-			System.out.printf("Milliseconds to create tree: %d%n",
-					System.currentTimeMillis() - start);
 
-			// Encode the file and print time to encode file
-			start = System.currentTimeMillis();
+			// Compress the file
 			EncodedData data = huffman.compress();
-			System.out.printf("Milliseconds to encode the file: %d%n",
-					System.currentTimeMillis() - start);
 
 			// Get compression percent
 			final int COMPRESSED_BYTES = data.getEncodedString().length();
