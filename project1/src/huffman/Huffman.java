@@ -30,6 +30,7 @@ public class Huffman {
 	}
 
 	private void readFile(String filename) throws IOException {
+		long start = System.nanoTime();
 		fileString = new String(Files.readAllBytes(Paths.get(filename)));
 		final int ASCII_LENGTH = 128;
 		int[] frequencies = new int[ASCII_LENGTH];
@@ -55,6 +56,8 @@ public class Huffman {
 				nodes.offer(new Node((char) i, freq));
 			}
 		}
+		System.out.printf("Time to find frequencies: %d ns%n",
+				System.nanoTime() - start);
 	}
 
 	public EncodedData compress() {
