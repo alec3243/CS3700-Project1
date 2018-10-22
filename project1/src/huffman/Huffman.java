@@ -59,6 +59,7 @@ public class Huffman {
 
 	public EncodedData compress() {
 		Node x, y, z;
+		long start = System.nanoTime();
 		while (nodes.size() > 1) {
 			z = new Node();
 			x = nodes.poll();
@@ -69,8 +70,13 @@ public class Huffman {
 			nodes.offer(z);
 		}
 		Node root = nodes.poll();
+		System.out.printf("Time to construct tree: %d ns%n", System.nanoTime()
+				- start);
 		findCodes(root, "");
-		return new EncodedData(root, encode());
+		start = System.nanoTime();
+		encode();
+		System.out.printf("Time to encode: %d%n", System.nanoTime() - start);
+		return new EncodedData(root, encodedString.toString());
 	}
 
 	public String decode(EncodedData data) {
@@ -103,7 +109,7 @@ public class Huffman {
 		}
 	}
 
-	private String encode() {
+	private void encode() {
 		StringBuilder[] threadResults = new StringBuilder[THREAD_COUNT];
 		for (int i = 0; i < threadResults.length; i++) {
 			threadResults[i] = new StringBuilder();
@@ -125,7 +131,6 @@ public class Huffman {
 		for (StringBuilder sb : threadResults) {
 			encodedString.append(sb.toString());
 		}
-		return encodedString.toString();
 	}
 
 	static class Parser implements Runnable {
