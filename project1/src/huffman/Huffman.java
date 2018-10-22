@@ -9,8 +9,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Huffman {
+	private static int THREAD_COUNT = 4;
+	private static ExecutorService executor1 = Executors
+			.newFixedThreadPool(THREAD_COUNT);
+	private static ExecutorService executor2 = Executors
+			.newFixedThreadPool(THREAD_COUNT);
 	private static char ZERO = '0';
 	private static char ONE = '1';
+
 	private String fileString;
 	private StringBuilder encodedString;
 	private HashMap<Character, String> charCodes;
@@ -27,8 +33,20 @@ public class Huffman {
 		fileString = new String(Files.readAllBytes(Paths.get(filename)));
 		final int ASCII_LENGTH = 128;
 		int[] frequencies = new int[ASCII_LENGTH];
-		for (char c : fileString.toCharArray()) {
-			frequencies[c] = frequencies[c] + 1;
+		char[] chars = fileString.toCharArray();
+		int startIndex = 0;
+		final int FILE_SIZE_DIVISION = (int) Math.ceil((double) fileString
+				.length() / 4);
+		int finishIndex = FILE_SIZE_DIVISION;
+		for (int i = 0; i < THREAD_COUNT; i++) {
+			executor1.execute(new Parser(startIndex, finishIndex, chars,
+					frequencies));
+			startIndex += FILE_SIZE_DIVISION;
+			finishIndex = startIndex + FILE_SIZE_DIVISION;
+		}
+		executor1.shutdown();
+		while (!executor1.isTerminated()) {
+			Thread.yield();
 		}
 		int freq = 0;
 		for (int i = 0; i < frequencies.length; i++) {
@@ -86,7 +104,6 @@ public class Huffman {
 	}
 
 	private String encode() {
-		final int THREAD_COUNT = 4;
 		StringBuilder[] threadResults = new StringBuilder[THREAD_COUNT];
 		for (int i = 0; i < threadResults.length; i++) {
 			threadResults[i] = new StringBuilder();
@@ -95,21 +112,46 @@ public class Huffman {
 		final int FILE_LENGTH_DIVIDED = (int) Math.ceil((double) fileString
 				.length() / THREAD_COUNT);
 		int finishIndex = FILE_LENGTH_DIVIDED;
-		ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
 		for (int i = 0; i < THREAD_COUNT; i++) {
-			executor.execute(new Encoder(threadResults[i], startingIndex,
+			executor2.execute(new Encoder(threadResults[i], startingIndex,
 					finishIndex, fileString, charCodes));
 			startingIndex += FILE_LENGTH_DIVIDED;
 			finishIndex = startingIndex + FILE_LENGTH_DIVIDED;
 		}
-		executor.shutdown();
-		while (!executor.isTerminated()) {
+		executor2.shutdown();
+		while (!executor2.isTerminated()) {
 			Thread.yield();
 		}
 		for (StringBuilder sb : threadResults) {
 			encodedString.append(sb.toString());
 		}
 		return encodedString.toString();
+	}
+
+	static class Parser implements Runnable {
+		int startIndex;
+		int finishIndex;
+		char[] chars;
+		int[] frequencies;
+
+		Parser(int startIndex, int finishIndex, char[] chars, int[] frequencies) {
+			this.startIndex = startIndex;
+			this.finishIndex = finishIndex;
+			this.chars = chars;
+			this.frequencies = frequencies;
+		}
+
+		@Override
+		public void run() {
+			for (int i = startIndex; i < finishIndex; i++) {
+				if (i >= chars.length) {
+					break;
+				}
+				frequencies[chars[i]] = frequencies[chars[i]] + 1;
+			}
+
+		}
+
 	}
 
 	static class Encoder implements Runnable {
