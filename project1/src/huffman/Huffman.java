@@ -5,8 +5,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.PriorityQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class Huffman {
 	private static char ZERO = '0';
@@ -41,6 +39,7 @@ public class Huffman {
 
 	public EncodedData compress() {
 		Node x, y, z;
+		long start = System.nanoTime();
 		while (nodes.size() > 1) {
 			z = new Node();
 			x = nodes.poll();
@@ -51,8 +50,13 @@ public class Huffman {
 			nodes.offer(z);
 		}
 		Node root = nodes.poll();
+		System.out.printf("Time to construct tree: %d ns%n", System.nanoTime()
+				- start);
 		findCodes(root, "");
-		return new EncodedData(root, encode());
+		start = System.nanoTime();
+		encode();
+		System.out.printf("Time to encode: %d ns%n", System.nanoTime() - start);
+		return new EncodedData(root, encodedString.toString());
 	}
 
 	public String decode(EncodedData data) {
@@ -85,11 +89,10 @@ public class Huffman {
 		}
 	}
 
-	private String encode() {
+	private void encode() {
 		for (int i = 0; i < fileString.length(); i++) {
 			encodedString.append(charCodes.get(fileString.charAt(i)));
 		}
-		return encodedString.toString();
 	}
 
 }
