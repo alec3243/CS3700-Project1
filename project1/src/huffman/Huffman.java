@@ -75,7 +75,7 @@ public class Huffman {
 		findCodes(root, "");
 		start = System.nanoTime();
 		encode();
-		System.out.printf("Time to encode: %d%n", System.nanoTime() - start);
+		System.out.printf("Time to encode: %d ns%n", System.nanoTime() - start);
 		return new EncodedData(root, encodedString.toString());
 	}
 
